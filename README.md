@@ -6,7 +6,6 @@ Sistema de vacunacion en Flutter para login, registro de usuarios y agendamiento
 
 - Flutter SDK instalado
 - Dart SDK incluido con Flutter
-- Un emulador Android, iOS, navegador web o un dispositivo fisico conectado
 
 ## Ejecutar el proyecto
 
