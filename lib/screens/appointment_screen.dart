@@ -262,7 +262,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final citasAgendadas = _controladorCitas.citasAgendadas;
+    final citasAgendadas = _controladorCitas.citasAgendadas
+        .where((cita) => cita.estado != EstadoCita.cancelada)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
