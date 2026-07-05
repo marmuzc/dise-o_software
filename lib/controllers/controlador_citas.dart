@@ -29,5 +29,27 @@ class ControladorCitas {
     );
   }
 
+  //reprograma una cita existente delegando en el gestor de citas.
+  Cita reprogramarCita({
+    required String citaId,
+    required DateTime nuevaFecha,
+  }) {
+    return _gestorCitas.reprogramarCita(
+      citaId: citaId,
+      nuevaFecha: nuevaFecha,
+    );
+  }
+
+  //cancela una cita existente delegando en el gestor de citas.
+  Cita cancelarCita(String citaId) {
+    return _gestorCitas.cancelarCita(citaId);
+  }
+
+  //citas de una persona en particular, para el seguimiento de citas
+  //y para mostrar los antecedentes en la ficha de la persona usuaria.
+  List<Cita> citasDe(String persona) {
+    return _gestorCitas.citasDePersona(persona);
+  }
+
   List<Cita> get citasAgendadas => _gestorCitas.citas;
 }

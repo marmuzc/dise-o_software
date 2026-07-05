@@ -29,6 +29,29 @@ class AuthService {
     return null;
   }
 
+  //busca una persona usuaria registrada por username, correo, rut
+  //o nombre completo, sin exigir contrasena. Se usa para que el
+  //funcionario/usuario pueda consultar la ficha de una persona.
+  Usuario? buscarUsuario(String query) {
+    final valorBuscado = _normalizar(query);
+    if (valorBuscado.isEmpty) {
+      return null;
+    }
+
+    for (final account in _usuarios.values) {
+      final coincide = _normalizar(account.username) == valorBuscado ||
+          _normalizar(account.email) == valorBuscado ||
+          _normalizar(account.rut) == valorBuscado ||
+          _normalizar(account.fullName) == valorBuscado;
+
+      if (coincide) {
+        return account;
+      }
+    }
+
+    return null;
+  }
+
   Usuario registrarUsuario({
     required String fullName,
     required String rut,

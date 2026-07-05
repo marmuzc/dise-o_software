@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/controlador_citas.dart';
+import '../controllers/controlador_vacunaciones.dart';
 import '../domain/gestor_citas.dart';
+import '../domain/gestor_vacunaciones.dart';
 import '../models/campana.dart';
 import '../models/cita.dart';
 import '../models/oferta_vacunacion.dart';
 import '../models/punto_vacunacion.dart';
 import '../models/usuario.dart';
+import 'ficha_screen.dart';
+import 'historial_vacunacion_screen.dart';
+import 'seguimiento_citas_screen.dart';
 
 class AppointmentScreen extends StatefulWidget {
   final Usuario user;
@@ -20,6 +25,8 @@ class AppointmentScreen extends StatefulWidget {
 class _AppointmentScreenState extends State<AppointmentScreen> {
   final _gestorCitas = GestorCitas();
   late final ControladorCitas _controladorCitas;
+  final _gestorVacunaciones = GestorVacunaciones();
+  late final ControladorVacunaciones _controladorVacunaciones;
 
   late final List<PuntoVacunacion> _puntosVacunacion;
   late final List<Campana> _campanas;
@@ -37,6 +44,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   void initState() {
     super.initState();
     _controladorCitas = ControladorCitas(_gestorCitas);
+    _controladorVacunaciones = ControladorVacunaciones(_gestorVacunaciones);
 
     _puntosVacunacion = [
       PuntoVacunacion(
@@ -196,6 +204,62 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     }
   }
 
+  void _abrirFicha() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FichaScreen(
+          usuarioActual: widget.user,
+          controladorCitas: _controladorCitas,
+          controladorVacunaciones: _controladorVacunaciones,
+        ),
+      ),
+    );
+  }
+
+  void _abrirHistorialVacunacion() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => HistorialVacunacionScreen(
+          usuarioActual: widget.user,
+          controladorVacunaciones: _controladorVacunaciones,
+          campanas: _campanas,
+          puntosVacunacion: _puntosVacunacion,
+        ),
+      ),
+    );
+  }
+
+  void _abrirSeguimientoCitas() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => SeguimientoCitasScreen(
+              usuarioActual: widget.user,
+              controladorCitas: _controladorCitas,
+            ),
+          ),
+        )
+        .then((_) => setState(() {}));
+  }
+
+  Widget _construirEnlaceHeader(String texto, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Text(
+          texto,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final citasAgendadas = _controladorCitas.citasAgendadas;
@@ -203,7 +267,32 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 10,
-        title: const Text('     Agendar cita de vacunacion'),
+        title: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text('Agendar cita de vacunacion'),
+              const SizedBox(width: 20),
+              _construirEnlaceHeader(
+                'Historial de vacunaciones',
+                _abrirHistorialVacunacion,
+              ),
+              const SizedBox(width: 8),
+              _construirEnlaceHeader(
+                'Seguimiento de citas',
+                _abrirSeguimientoCitas,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Ficha de usuario',
+            icon: const Icon(Icons.badge_outlined),
+            onPressed: _abrirFicha,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

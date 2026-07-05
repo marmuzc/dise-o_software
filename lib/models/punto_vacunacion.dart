@@ -30,4 +30,15 @@ class PuntoVacunacion {
     final clave = _claveFecha(fecha);
     citasPorDia[clave] = (citasPorDia[clave] ?? 0) + 1;
   }
+
+  //libera un cupo previamente registrado para una fecha, usado
+  //al cancelar una cita o al reprogramarla a otra fecha, para que
+  //el cupo antiguo quede disponible nuevamente.
+  void liberarCita(DateTime fecha) {
+    final clave = _claveFecha(fecha);
+    final actual = citasPorDia[clave] ?? 0;
+    if (actual > 0) {
+      citasPorDia[clave] = actual - 1;
+    }
+  }
 }
