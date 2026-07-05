@@ -1,0 +1,30 @@
+@startuml DC02_ConsultarHistorial
+
+title Consultar historial de vacunación
+
+actor "Usuario / Funcionario" as Actor
+
+box "Sistema de Gestión de Vacunación"
+    participant ":ControladorVacunacion" as Ctrl
+    participant ":GestorVacunacion" as Gestor
+    participant ":ComponenteSeguridad" as Seg
+    participant ":Vacunacion" as Vac
+end box
+
+Actor -> Ctrl : consultarHistorial(rut)
+
+Ctrl -> Gestor : 1: obtenerHistorial(usuarioActual, rut)
+
+Gestor -> Seg : 2: puedeConsultar(usuarioActual, rut)
+
+Seg --> Gestor : 3: autorizado
+
+Gestor -> Vac : 4: buscarPorPersona(rut)
+
+Vac --> Gestor : 5: listaVacunaciones
+
+Gestor --> Ctrl : 6: historial
+
+Ctrl --> Actor : 7: mostrarHistorial(historial)
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml DC01_AgendarCita
+
+title Agendar cita de vacunación
+
+actor "Usuario / Funcionario" as Actor
+
+box "Sistema de Gestión de Vacunación"
+    participant ":ControladorCitas" as Ctrl
+    participant ":GestorCitas" as Gestor
+    participant ":PuntoVacunacion" as Punto
+    participant ":Campaña" as Camp
+    participant ":Cita" as Cita
+end box
+
+participant ":AdapterNotificaciones" as Adapter
+
+Actor -> Ctrl : agendarCita(rut,id_punto,id_campaña,fecha_hora)
+
+Ctrl -> Gestor : 1: crearCita(datos)
+
+Gestor -> Punto : 2: verificarDisponibilidad(fecha_hora)
+Punto --> Gestor : 3: disponible
+
+Gestor -> Camp : 4: estaActiva()
+Camp --> Gestor : 5: activa
+
+Gestor -> Cita ** : 6: new Cita(rut,id_punto,id_campaña,fecha_hora)
+
+Gestor --> Ctrl : 7: citaCreada
+
+Ctrl -> Adapter : 8: notificarAgendamiento(cita)
+
+@enduml
