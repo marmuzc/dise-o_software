@@ -426,7 +426,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 16),
                           ],
                           Text(
-                            'Credenciales de prueba: usuario / vacuna2026',
+                            'Cuentas de prueba:\n'
+                            'Ciudadano: usuario / vacuna2026\n'
+                            'Funcionario: funcionario / funcion2026\n'
+                            'Administrador: administrador / admin2026',
                             textAlign: TextAlign.center,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
