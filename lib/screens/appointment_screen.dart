@@ -9,9 +9,12 @@ import '../models/cita.dart';
 import '../models/oferta_vacunacion.dart';
 import '../models/punto_vacunacion.dart';
 import '../models/usuario.dart';
+import '../services/notification_service.dart';
 import 'ficha_screen.dart';
 import 'historial_vacunacion_screen.dart';
 import 'seguimiento_citas_screen.dart';
+
+
 
 class AppointmentScreen extends StatefulWidget {
   final Usuario user;
@@ -43,8 +46,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    _controladorCitas = ControladorCitas(_gestorCitas);
+    final notificationService = NotificationService();
+    _controladorCitas = ControladorCitas(_gestorCitas, notificationService);
+    
     _controladorVacunaciones = ControladorVacunaciones(_gestorVacunaciones);
+
 
     _puntosVacunacion = [
       PuntoVacunacion(
@@ -189,6 +195,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         puntoVacunacion: puntoSeleccionado,
         fecha: fechaHora,
         campana: campanaSeleccionada,
+        telefonoContacto: widget.user.cellPhone,
       );
 
       setState(() {
