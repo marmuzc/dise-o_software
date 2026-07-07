@@ -1,3 +1,4 @@
+import '../models/rol.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
 
@@ -9,6 +10,8 @@ class ControladorRegistro {
   final AuthService _authService = AuthService();
 
   /// Crea (factory) un objeto usuario a partir de los datos proporcionados.
+  /// El autoregistro siempre crea el usuario con rol Usuario/Ciudadano;
+  /// las cuentas de Funcionario y Administrador se aprovisionan aparte.
   Usuario crearUsuario({
     required String fullName,
     required String rut,
@@ -50,6 +53,7 @@ class ControladorRegistro {
       email: correo,
       cellPhone: celular,
       password: password,
+      rol: Rol.usuario,
     );
   }
 
