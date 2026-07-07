@@ -4,14 +4,17 @@ import '../controllers/controlador_citas.dart';
 import '../controllers/controlador_vacunaciones.dart';
 import '../domain/gestor_citas.dart';
 import '../domain/gestor_vacunaciones.dart';
+import '../domain/permisos.dart';
 import '../models/campana.dart';
 import '../models/cita.dart';
 import '../models/oferta_vacunacion.dart';
 import '../models/punto_vacunacion.dart';
+import '../models/rol.dart';
 import '../models/usuario.dart';
 import '../services/notification_service.dart';
 import 'ficha_screen.dart';
 import 'historial_vacunacion_screen.dart';
+import 'login_screen.dart';
 import 'seguimiento_citas_screen.dart';
 
 
@@ -218,6 +221,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           usuarioActual: widget.user,
           controladorCitas: _controladorCitas,
           controladorVacunaciones: _controladorVacunaciones,
+          puedeConsultarOtros:
+              Permisos.puedeConsultarDatosDeOtros(widget.user.rol),
         ),
       ),
     );
@@ -231,6 +236,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           controladorVacunaciones: _controladorVacunaciones,
           campanas: _campanas,
           puntosVacunacion: _puntosVacunacion,
+          puedeConsultarOtros:
+              Permisos.puedeConsultarDatosDeOtros(widget.user.rol),
+          puedeRegistrarVacunacion:
+              Permisos.puedeRegistrarVacunacion(widget.user.rol),
         ),
       ),
     );
@@ -243,10 +252,42 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             builder: (_) => SeguimientoCitasScreen(
               usuarioActual: widget.user,
               controladorCitas: _controladorCitas,
+              puedeGestionarOtros:
+                  Permisos.puedeGestionarCitasDeOtros(widget.user.rol),
             ),
           ),
         )
         .then((_) => setState(() {}));
+  }
+
+  Future<void> _cerrarSesion() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cerrar sesion'),
+        content: Text(
+          '¿Deseas cerrar la sesion de ${widget.user.fullName} '
+          '(${widget.user.rol.etiqueta})?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Si, cerrar sesion'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   Widget _construirEnlaceHeader(String texto, VoidCallback onTap) {
@@ -301,6 +342,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             icon: const Icon(Icons.badge_outlined),
             onPressed: _abrirFicha,
           ),
+          IconButton(
+            tooltip: 'Cerrar sesion',
+            icon: const Icon(Icons.logout),
+            onPressed: _cerrarSesion,
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -337,6 +383,23 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.user.rol.etiqueta,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -551,7 +614,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     ),
                     title: Text(cita.persona),
                     subtitle: Text(
-                      '${cita.puntoVacunacion.nombre}\nCampana: ${cita.campana.nombre}\nFecha: ${_formatoFechaCorta(cita.fecha)}\nHora: ${_formatoHora(TimeOfDay.fromDateTime(cita.fecha))}',
+                      '${cita.puntoVacunacion.nombre}\nCampana: ${cita.campana.nombre}\nFecha: ${_formatoFechaCorta(cita.fecha)}\nHora: ${_formatoHora(TimeOfDay.fromDateTime(cita.fecha))}'
+                      '${cita.estado == EstadoCita.reprogramada ? '\n(Reprogramada)' : ''}',
                     ),
                     isThreeLine: true,
                   ),

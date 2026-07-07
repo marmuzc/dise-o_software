@@ -1,3 +1,4 @@
+import '../models/rol.dart';
 import '../models/usuario.dart';
 
 class AuthService {
@@ -9,6 +10,25 @@ class AuthService {
       email: 'admin@vacunacion.cl',
       cellPhone: '912345678',
       password: 'vacuna2026',
+      rol: Rol.usuario,
+    ),
+    'funcionario': Usuario(
+      username: 'funcionario',
+      fullName: 'Pedro Soto',
+      rut: '22.222.222-2',
+      email: 'funcionario@vacunacion.cl',
+      cellPhone: '922345678',
+      password: 'funcion2026',
+      rol: Rol.funcionario,
+    ),
+    'administrador': Usuario(
+      username: 'administrador',
+      fullName: 'Ana Rojas',
+      rut: '33.333.333-3',
+      email: 'admin.sistema@vacunacion.cl',
+      cellPhone: '932345678',
+      password: 'admin2026',
+      rol: Rol.administrador,
     ),
   };
 
@@ -30,8 +50,10 @@ class AuthService {
   }
 
   //busca una persona usuaria registrada por username, correo, rut
-  //o nombre completo, sin exigir contrasena. Se usa para que el
-  //funcionario/usuario pueda consultar la ficha de una persona.
+  //o nombre completo, sin exigir contrasena. Se usa para que
+  //Funcionario/Administrador puedan consultar la ficha de una persona.
+  //Quien llama a este metodo debe validar antes, con Permisos, que el
+  //rol del usuario autenticado tenga permiso para consultar a otros.
   Usuario? buscarUsuario(String query) {
     final valorBuscado = _normalizar(query);
     if (valorBuscado.isEmpty) {
@@ -52,6 +74,53 @@ class AuthService {
     return null;
   }
 
+  //el autoregistro desde la pantalla de login siempre crea una cuenta
+  //con rol Usuario/Ciudadano. Las cuentas de Funcionario y
+  //Administrador se aprovisionan aparte (no son autoregistrables),
+  //para que el ingreso de personal autorizado no dependa de un
+  //formulario publico.
+  //actualiza el correo y celular de una persona usuaria ya
+  //registrada, usado desde la ficha para modificar sus datos de
+  //contacto. Se busca por username (que no cambia aunque cambie el
+  //correo) y se valida que el nuevo correo no este siendo usado por
+  //otra persona.
+  Usuario actualizarContacto({
+    required String username,
+    required String nuevoCorreo,
+    required String nuevoCelular,
+  }) {
+    final key = _normalizar(username);
+    final actual = _usuarios[key];
+    if (actual == null) {
+      throw Exception('No se encontro la persona usuaria.');
+    }
+
+    final correo = nuevoCorreo.trim();
+    if (correo.isEmpty || !correo.contains('@') || !correo.contains('.')) {
+      throw Exception('Ingresa un correo valido.');
+    }
+
+    final celular = nuevoCelular.trim();
+    final digitos = celular.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitos.length < 8 || digitos.length > 15) {
+      throw Exception('Ingresa un numero de celular valido.');
+    }
+
+    final correoNormalizado = _normalizar(correo);
+    final correoUsadoPorOtro = _usuarios.entries.any(
+      (entry) =>
+          entry.key != key &&
+          _normalizar(entry.value.email) == correoNormalizado,
+    );
+    if (correoUsadoPorOtro) {
+      throw Exception('Ese correo ya esta siendo usado por otra persona.');
+    }
+
+    final actualizado = actual.copyWith(email: correo, cellPhone: celular);
+    _usuarios[key] = actualizado;
+    return actualizado;
+  }
+
   Usuario registrarUsuario({
     required String fullName,
     required String rut,
@@ -59,7 +128,6 @@ class AuthService {
     required String cellPhone,
     required String password,
   }) {
-    // Mantener compatibilidad: construir el Usuario y delegar en guardarUsuario
     final nuevo = Usuario(
       username: _normalizar(email),
       fullName: fullName.trim(),
@@ -67,6 +135,7 @@ class AuthService {
       email: email.trim(),
       cellPhone: cellPhone.trim(),
       password: password,
+      rol: Rol.usuario,
     );
 
     return guardarUsuario(nuevo);

@@ -11,11 +11,13 @@ import '../models/usuario.dart';
 class SeguimientoCitasScreen extends StatefulWidget {
   final Usuario usuarioActual;
   final ControladorCitas controladorCitas;
+  final bool puedeGestionarOtros;
 
   const SeguimientoCitasScreen({
     super.key,
     required this.usuarioActual,
     required this.controladorCitas,
+    required this.puedeGestionarOtros,
   });
 
   @override
@@ -23,8 +25,21 @@ class SeguimientoCitasScreen extends StatefulWidget {
 }
 
 class _SeguimientoCitasScreenState extends State<SeguimientoCitasScreen> {
+  final _busquedaController = TextEditingController();
   String? _mensaje;
   bool _esError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _busquedaController.text = widget.usuarioActual.fullName;
+  }
+
+  @override
+  void dispose() {
+    _busquedaController.dispose();
+    super.dispose();
+  }
 
   String _formatoFecha(DateTime fecha) {
     return '${fecha.day.toString().padLeft(2, '0')}/'
@@ -125,8 +140,10 @@ class _SeguimientoCitasScreenState extends State<SeguimientoCitasScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final citas =
-        widget.controladorCitas.citasDe(widget.usuarioActual.fullName);
+    final persona = widget.puedeGestionarOtros
+        ? _busquedaController.text
+        : widget.usuarioActual.fullName;
+    final citas = widget.controladorCitas.citasDe(persona);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Seguimiento de citas')),
@@ -135,6 +152,18 @@ class _SeguimientoCitasScreenState extends State<SeguimientoCitasScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.puedeGestionarOtros) ...[
+              TextField(
+                controller: _busquedaController,
+                decoration: const InputDecoration(
+                  labelText: 'Persona (nombre completo)',
+                  prefixIcon: Icon(Icons.person_search_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+            ],
             if (_mensaje != null) ...[
               Container(
                 padding: const EdgeInsets.all(14),
