@@ -10,8 +10,8 @@ import '../models/registro_vacunacion.dart';
 //para validar las dosis que ya recibio.
 
 class GestorVacunaciones {
-  final List<RegistroVacunacion> _registros = [];
-  int _contadorId = 0;
+  static final List<RegistroVacunacion> _registros = [];
+  static int _contadorId = 0;
 
   List<RegistroVacunacion> get registros => List.unmodifiable(_registros);
 
