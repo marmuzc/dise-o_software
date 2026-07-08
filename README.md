@@ -43,3 +43,13 @@ Usuario:
 
 - Usuario, correo o RUT: `usuario`
 - Contraseña: `vacuna2026`
+
+Funcionario:
+
+- Usuario, correo o RUT: `funcionario`
+- Contraseña: `funcion2026`
+
+Usuario:
+
+- Usuario, correo o RUT: `administrador`
+- Contraseña: `admin2026`
