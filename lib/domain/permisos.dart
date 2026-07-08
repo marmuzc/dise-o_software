@@ -34,4 +34,10 @@ class Permisos {
   static bool puedeDefinirCampanas(Rol rol) {
     return rol == Rol.administrador;
   }
+
+  //definir centros de vacunación (nombre, dirección, horarios) es
+  //responsabilidad exclusiva del Administrador, no del Funcionario.
+  static bool puedeGestionarPuntosVacunacion(Rol rol) {
+    return rol == Rol.administrador;
+  }
 }
