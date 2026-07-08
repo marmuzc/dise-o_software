@@ -10,6 +10,10 @@ import '../models/registro_vacunacion.dart';
 //para validar las dosis que ya recibio.
 
 class GestorVacunaciones {
+  GestorVacunaciones._internal();
+  static final GestorVacunaciones _instance = GestorVacunaciones._internal();
+  factory GestorVacunaciones() => _instance;
+
   final List<RegistroVacunacion> _registros = [];
   int _contadorId = 0;
 

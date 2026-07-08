@@ -10,6 +10,10 @@ import '../models/punto_vacunacion.dart';
 //puede ser accedida por el controlador de citas para mostrarlas en la interfaz.
 
 class GestorCitas {
+  GestorCitas._internal();
+  static final GestorCitas _instance = GestorCitas._internal();
+  factory GestorCitas() => _instance;
+
   final List<Cita> _citas = [];
   int _contadorId = 0;
 

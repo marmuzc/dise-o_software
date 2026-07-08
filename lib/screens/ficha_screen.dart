@@ -45,7 +45,7 @@ class _FichaScreenState extends State<FichaScreen> {
   @override
   void initState() {
     super.initState();
-    _busquedaController.text = widget.usuarioActual.fullName;
+    _busquedaController.text = widget.usuarioActual.rut;
     _personaConsultada = widget.usuarioActual;
   }
 
@@ -65,7 +65,7 @@ class _FichaScreenState extends State<FichaScreen> {
     final texto = _busquedaController.text.trim();
     if (texto.isEmpty) {
       setState(() {
-        _mensaje = 'Ingresa un nombre, RUT o correo para buscar.';
+        _mensaje = 'Ingresa un RUT para buscar.';
         _personaConsultada = null;
         _editandoContacto = false;
       });
@@ -134,10 +134,10 @@ class _FichaScreenState extends State<FichaScreen> {
     final persona = _personaConsultada;
     final List<Cita> citas = persona == null
         ? []
-        : widget.controladorCitas.citasDe(persona.fullName);
+      : widget.controladorCitas.citasDe(persona.rut);
     final List<RegistroVacunacion> historial = persona == null
         ? []
-        : widget.controladorVacunaciones.historialDe(persona.fullName);
+      : widget.controladorVacunaciones.historialDe(persona.rut);
     final citasActivas =
         citas.where((c) => c.estado != EstadoCita.cancelada).length;
 
@@ -155,7 +155,7 @@ class _FichaScreenState extends State<FichaScreen> {
                     child: TextField(
                       controller: _busquedaController,
                       decoration: const InputDecoration(
-                        labelText: 'Buscar por nombre, RUT o correo',
+                        labelText: 'Buscar por RUT',
                         prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(),
                       ),
