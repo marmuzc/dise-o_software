@@ -37,6 +37,24 @@ flutter config --enable-web
 flutter run -d chrome
 ```
 
+## Ejecutar el backend del servicio externo de notificaciones
+Requiere node.js
+1. Crear un archivo .env en la carpeta backend con la siguiente información
+```bash
+MAILERSEND_API_KEY=(AQUI VA API KEY DE MAILERSEND)
+FROM_EMAIL=(AQUI VA EMAIL REMITENTE)
+FROM_NAME=Vacunación
+PORT=3000
+```
+2. Abrir una terminal en la misma carpeta
+3. Instalar el servicio
+```bash
+npm install
+```
+4. Ejecutar el servicio
+```bash
+npm start
+```
 ## Credenciales de prueba
 
 Usuario:
