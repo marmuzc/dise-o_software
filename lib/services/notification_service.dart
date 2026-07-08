@@ -13,7 +13,7 @@ class NotificationService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/notificar-cita');
-      
+
       // Limpiamos el número eliminando caracteres no numéricos
       final String numeroLimpio = telefono.replaceAll(RegExp(r'[^0-9]'), '');
 

@@ -28,4 +28,10 @@ class Permisos {
   static bool puedeGestionarCitasDeOtros(Rol rol) {
     return rol == Rol.funcionario || rol == Rol.administrador;
   }
+
+  //definir campañas de vacunación (nombre, descripción, fechas) es
+  //responsabilidad exclusiva del Administrador, no del Funcionario.
+  static bool puedeDefinirCampanas(Rol rol) {
+    return rol == Rol.administrador;
+  }
 }
