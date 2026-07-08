@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../controllers/controlador_campanas.dart';
 import '../controllers/controlador_citas.dart';
 import '../controllers/controlador_vacunaciones.dart';
+import '../domain/gestor_campanas.dart';
 import '../domain/gestor_citas.dart';
 import '../domain/gestor_vacunaciones.dart';
 import '../domain/permisos.dart';
@@ -12,12 +14,11 @@ import '../models/punto_vacunacion.dart';
 import '../models/rol.dart';
 import '../models/usuario.dart';
 import '../services/notification_service.dart';
+import 'admin_campanas_screen.dart';
 import 'ficha_screen.dart';
 import 'historial_vacunacion_screen.dart';
 import 'login_screen.dart';
 import 'seguimiento_citas_screen.dart';
-
-
 
 class AppointmentScreen extends StatefulWidget {
   final Usuario user;
@@ -30,12 +31,14 @@ class AppointmentScreen extends StatefulWidget {
 
 class _AppointmentScreenState extends State<AppointmentScreen> {
   final _gestorCitas = GestorCitas();
+  final _notificationService = NotificationService();
   late final ControladorCitas _controladorCitas;
   final _gestorVacunaciones = GestorVacunaciones();
   late final ControladorVacunaciones _controladorVacunaciones;
+  final _gestorCampanas = GestorCampanas();
+  late final ControladorCampanas _controladorCampanas;
 
   late final List<PuntoVacunacion> _puntosVacunacion;
-  late final List<Campana> _campanas;
   late final List<OfertaVacunacion> _ofertasVacunacion;
   Campana? _campanaSeleccionada;
   PuntoVacunacion? _puntoSeleccionado;
@@ -49,11 +52,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    final notificationService = NotificationService();
-    _controladorCitas = ControladorCitas(_gestorCitas, notificationService);
-    
+    _controladorCitas = ControladorCitas(_gestorCitas, _notificationService);
     _controladorVacunaciones = ControladorVacunaciones(_gestorVacunaciones);
-
+    _controladorCampanas = ControladorCampanas(_gestorCampanas);
 
     _puntosVacunacion = [
       PuntoVacunacion(
@@ -68,41 +69,31 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           capacidadDiaria: 1),
     ];
 
-    _campanas = [
-      Campana(
-          id: 'c1',
-          nombre: 'Campana Influenza 2026',
-          fechaInicio: DateTime.now().subtract(const Duration(days: 5)),
-          fechaFin: DateTime.now().add(const Duration(days: 30)),
-          descripcion: 'Campaña de vacunación contra la influenza 2026',
-          estado: true),
-      Campana(
-          id: 'c2',
-          nombre: 'Campana COVID-19 Refuerzo',
-          fechaInicio: DateTime.now().subtract(const Duration(days: 15)),
-          fechaFin: DateTime.now().add(const Duration(days: 15)),
-          descripcion: 'Campaña de vacunación de refuerzo contra COVID-19',
-          estado: true),
-    ];
+    final campanasIniciales = _controladorCampanas.campanas;
 
     _ofertasVacunacion = [
       OfertaVacunacion(
         puntoVacunacion: _puntosVacunacion[0],
-        campana: _campanas[0],
+        campana: campanasIniciales[0],
       ),
       OfertaVacunacion(
         puntoVacunacion: _puntosVacunacion[1],
-        campana: _campanas[1],
+        campana: campanasIniciales[1],
       ),
       OfertaVacunacion(
         puntoVacunacion: _puntosVacunacion[2],
-        campana: _campanas[0],
+        campana: campanasIniciales[0],
       ),
     ];
 
     _fechasDisponibles = _generarFechasDisponibles();
     _horariosDisponibles = _generarHorariosDisponibles();
   }
+
+  //lista de campanas siempre leida desde el controlador compartido,
+  //para que las campanas que defina el Administrador aparezcan aqui
+  //tambien, sin depender de una lista fija creada al iniciar.
+  List<Campana> get _campanas => _controladorCampanas.campanas;
 
   @override
   void dispose() {
@@ -260,6 +251,18 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         .then((_) => setState(() {}));
   }
 
+  void _abrirAdminCampanas() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => AdminCampanasScreen(
+              controladorCampanas: _controladorCampanas,
+            ),
+          ),
+        )
+        .then((_) => setState(() {}));
+  }
+
   Future<void> _cerrarSesion() async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -333,6 +336,13 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 'Seguimiento de citas',
                 _abrirSeguimientoCitas,
               ),
+              if (Permisos.puedeDefinirCampanas(widget.user.rol)) ...[
+                const SizedBox(width: 8),
+                _construirEnlaceHeader(
+                  'Campañas de vacunacion',
+                  _abrirAdminCampanas,
+                ),
+              ],
             ],
           ),
         ),

@@ -22,10 +22,34 @@ class Campana {
   });
 
   bool estaActiva(DateTime fecha) {
+    if (!estado) {
+      return false;
+    }
     final soloFecha = DateTime(fecha.year, fecha.month, fecha.day);
     final inicio =
         DateTime(fechaInicio.year, fechaInicio.month, fechaInicio.day);
     final fin = DateTime(fechaFin.year, fechaFin.month, fechaFin.day);
     return !soloFecha.isBefore(inicio) && !soloFecha.isAfter(fin);
+  }
+
+  //permite crear una copia de la campaña con nombre, descripcion,
+  //fechas o estado actualizados, sin perder el resto de los datos.
+  //Se usa para que el Administrador pueda actualizar la vigencia y
+  //el estado de una campaña ya existente.
+  Campana copyWith({
+    String? nombre,
+    String? descripcion,
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    bool? estado,
+  }) {
+    return Campana(
+      id: id,
+      nombre: nombre ?? this.nombre,
+      descripcion: descripcion ?? this.descripcion,
+      fechaInicio: fechaInicio ?? this.fechaInicio,
+      fechaFin: fechaFin ?? this.fechaFin,
+      estado: estado ?? this.estado,
+    );
   }
 }

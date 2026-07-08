@@ -2,7 +2,8 @@ import '../domain/gestor_citas.dart';
 import '../models/campana.dart';
 import '../models/cita.dart';
 import '../models/punto_vacunacion.dart';
-import '../services/notification_service.dart'; 
+import '../services/notification_service.dart';
+
 //patron controlador-creador
 
 //Controlador para manejar la agenda de citas de vacunacion,
@@ -13,7 +14,6 @@ class ControladorCitas {
   final GestorCitas _gestorCitas;
   final NotificationService _notificationService;
 
-  
   ControladorCitas(this._gestorCitas, this._notificationService);
 
   Cita agendarCita({
@@ -21,7 +21,7 @@ class ControladorCitas {
     required PuntoVacunacion puntoVacunacion,
     required DateTime fecha,
     required Campana campana,
-    required String telefonoContacto, // <-- 4. Nuevo parámetro obligatorio
+    required String telefonoContacto,
   }) {
     // Primero se ejecuta la lógica interna del gestor
     final cita = _gestorCitas.crearCita(
@@ -42,7 +42,6 @@ class ControladorCitas {
     return cita;
   }
 
-  
   Cita reprogramarCita({
     required String citaId,
     required DateTime nuevaFecha,
@@ -52,11 +51,13 @@ class ControladorCitas {
       nuevaFecha: nuevaFecha,
     );
   }
-//cancela una cita existente delegando en el gestor de citas.
+
+  //cancela una cita existente delegando en el gestor de citas.
   Cita cancelarCita(String citaId) {
     return _gestorCitas.cancelarCita(citaId);
   }
-//citas de una persona en particular, para el seguimiento de citas
+
+  //citas de una persona en particular, para el seguimiento de citas
   //y para mostrar los antecedentes en la ficha de la persona usuaria.
   List<Cita> citasDe(String persona) {
     return _gestorCitas.citasDePersona(persona);
