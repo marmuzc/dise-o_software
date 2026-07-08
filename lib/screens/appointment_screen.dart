@@ -14,6 +14,7 @@ import '../models/punto_vacunacion.dart';
 import '../models/rol.dart';
 import '../models/usuario.dart';
 import '../services/notification_service.dart';
+import '../services/auth_service.dart';
 import 'admin_campanas_screen.dart';
 import 'admin_puntos_screen.dart';
 import 'ficha_screen.dart';
@@ -30,8 +31,10 @@ class AppointmentScreen extends StatefulWidget {
 }
 
 class _AppointmentScreenState extends State<AppointmentScreen> {
+  final _authService = AuthService();
   final _gestorCitas = GestorCitas();
   final _notificationService = NotificationService();
+  final _personaDestinoController = TextEditingController();
   late Usuario _usuarioActual;
   late final ControladorCitas _controladorCitas;
 
@@ -55,10 +58,14 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   String? _mensaje;
   bool _esError = false;
 
+  bool get _puedeGestionarCitasDeOtros =>
+      Permisos.puedeGestionarCitasDeOtros(_usuarioActual.rol);
+
   @override
   void initState() {
     super.initState();
     _usuarioActual = widget.user;
+    _personaDestinoController.text = _usuarioActual.rut;
     _controladorCitas = ControladorCitas(_gestorCitas, _notificationService);
     _controladorVacunaciones = ControladorVacunaciones(_gestorVacunaciones);
     _controladorCampanas = ControladorCampanas(_gestorCampanas);
@@ -75,6 +82,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   @override
   void dispose() {
+    _personaDestinoController.dispose();
     super.dispose();
   }
 
@@ -120,6 +128,24 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     if (_horaSeleccionada == null) _horaSeleccionada = _horariosDisponibles.first;
   }
 
+  Usuario _resolverPersonaDestino() {
+    if (!_puedeGestionarCitasDeOtros) {
+      return _usuarioActual;
+    }
+
+    final rut = _personaDestinoController.text.trim();
+    if (rut.isEmpty) {
+      throw Exception('Ingresa el RUT de la persona para agendar la cita.');
+    }
+
+    final encontrada = _authService.buscarUsuario(rut);
+    if (encontrada == null) {
+      throw Exception('No se encontro ninguna persona usuaria con ese RUT.');
+    }
+
+    return encontrada;
+  }
+
   void _agendarCita() {
     if (!_puedeElegirFechaHora || _fechaSeleccionada == null || _horaSeleccionada == null) {
       setState(() {
@@ -130,6 +156,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     }
 
     try {
+      final personaDestino = _resolverPersonaDestino();
       final fechaHora = DateTime(
         _fechaSeleccionada!.year,
         _fechaSeleccionada!.month,
@@ -139,15 +166,15 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       );
 
       final Cita cita = _controladorCitas.agendarCita(
-        persona: _usuarioActual.fullName,
+        persona: personaDestino.rut,
         puntoVacunacion: _puntoSeleccionado!,
         fecha: fechaHora,
         campana: _campanaSeleccionada!,
-        email: _usuarioActual.email,
+        email: personaDestino.email,
       );
 
       setState(() {
-        _mensaje = 'Cita agendada con éxito para ${cita.persona} en ${cita.puntoVacunacion.nombre}';
+        _mensaje = 'Cita agendada con éxito para ${personaDestino.fullName} (${cita.persona}) en ${cita.puntoVacunacion.nombre}';
         _esError = false;
       });
     } catch (e) {
@@ -197,6 +224,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           builder: (_) => SeguimientoCitasScreen(
             usuarioActual: _usuarioActual,
             controladorCitas: _controladorCitas,
+            controladorVacunaciones: _controladorVacunaciones,
+            campanas: _campanas,
+            puntosVacunacion: _controladorPuntos.puntos,
             puedeGestionarOtros: Permisos.puedeGestionarCitasDeOtros(_usuarioActual.rol),
           ),
         ))
@@ -274,9 +304,27 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     );
   }
 
+  List<Cita> _citasVisibles() {
+    final citas = _controladorCitas.citasAgendadas
+        .where((cita) => cita.estado != EstadoCita.cancelada)
+        .toList();
+
+    if (_puedeGestionarCitasDeOtros) {
+      citas.sort((a, b) => b.fecha.compareTo(a.fecha));
+      return citas;
+    }
+
+    final rutUsuario = _usuarioActual.rut.trim().toLowerCase();
+    final propias = citas
+        .where((cita) => cita.persona.trim().toLowerCase() == rutUsuario)
+        .toList();
+    propias.sort((a, b) => b.fecha.compareTo(a.fecha));
+    return propias;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final citasAgendadas = _controladorCitas.citasAgendadas.where((cita) => cita.estado != EstadoCita.cancelada).toList();
+    final citasAgendadas = _citasVisibles();
 
     return Scaffold(
       appBar: AppBar(
@@ -369,7 +417,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Seleccione la campaña y el punto de vacunación para agendar su cita.',
+                    'Seleccione la campaña y el punto de vacunación para agendar la cita.',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ],
@@ -384,6 +432,36 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_puedeGestionarCitasDeOtros) ...[
+                      TextField(
+                        controller: _personaDestinoController,
+                        decoration: const InputDecoration(
+                          labelText: 'RUT de la persona',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person_search_outlined),
+                          helperText: 'Funcionario y administrador pueden agendar para cualquier persona.',
+                        ),
+                        onChanged: (_) {
+                          setState(() {
+                            _mensaje = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ] else ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Se agendará la cita para ${_usuarioActual.fullName} (${_usuarioActual.rut}).',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     DropdownButtonFormField<Campana>(
                       value: _campanaSeleccionada,
                       decoration: const InputDecoration(
@@ -514,7 +592,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Citas agendadas (${citasAgendadas.length})',
+                _puedeGestionarCitasDeOtros
+                    ? 'Citas agendadas (${citasAgendadas.length})'
+                    : 'Tus citas agendadas (${citasAgendadas.length})',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),

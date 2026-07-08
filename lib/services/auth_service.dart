@@ -52,8 +52,8 @@ class AuthService {
     return null;
   }
 
-  //busca una persona usuaria registrada por username, correo, rut
-  //o nombre completo, sin exigir contrasena. Se usa para que
+  //busca una persona usuaria registrada por RUT, sin exigir contrasena.
+  //Se usa para que
   //Funcionario/Administrador puedan consultar la ficha de una persona.
   //Quien llama a este metodo debe validar antes, con Permisos, que el
   //rol del usuario autenticado tenga permiso para consultar a otros.
@@ -64,10 +64,7 @@ class AuthService {
     }
 
     for (final account in _usuarios.values) {
-      final coincide = _normalizar(account.username) == valorBuscado ||
-          _normalizar(account.email) == valorBuscado ||
-          _normalizar(account.rut) == valorBuscado ||
-          _normalizar(account.fullName) == valorBuscado;
+      final coincide = _normalizar(account.rut) == valorBuscado;
 
       if (coincide) {
         return account;

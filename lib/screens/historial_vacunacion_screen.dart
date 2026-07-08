@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/controlador_vacunaciones.dart';
 import '../models/campana.dart';
+import '../models/cita.dart';
 import '../models/punto_vacunacion.dart';
 import '../models/usuario.dart';
 
@@ -11,6 +12,8 @@ import '../models/usuario.dart';
 
 class HistorialVacunacionScreen extends StatefulWidget {
   final Usuario usuarioActual;
+  final Usuario? personaInicial;
+  final Cita? citaInicial;
   final ControladorVacunaciones controladorVacunaciones;
   final List<Campana> campanas;
   final List<PuntoVacunacion> puntosVacunacion;
@@ -20,6 +23,8 @@ class HistorialVacunacionScreen extends StatefulWidget {
   const HistorialVacunacionScreen({
     super.key,
     required this.usuarioActual,
+    this.personaInicial,
+    this.citaInicial,
     required this.controladorVacunaciones,
     required this.campanas,
     required this.puntosVacunacion,
@@ -36,6 +41,7 @@ class _HistorialVacunacionScreenState
     extends State<HistorialVacunacionScreen> {
   final _busquedaController = TextEditingController();
   final _dosisController = TextEditingController();
+  Usuario? _personaConsultada;
   Campana? _campanaSeleccionada;
   PuntoVacunacion? _puntoSeleccionado;
   DateTime _fechaAplicacion = DateTime.now();
@@ -45,7 +51,16 @@ class _HistorialVacunacionScreenState
   @override
   void initState() {
     super.initState();
-    _busquedaController.text = widget.usuarioActual.fullName;
+    final personaInicial = widget.personaInicial ?? widget.usuarioActual;
+    _busquedaController.text = personaInicial.rut;
+    _personaConsultada = personaInicial;
+
+    final citaInicial = widget.citaInicial;
+    if (citaInicial != null) {
+      _campanaSeleccionada = citaInicial.campana;
+      _puntoSeleccionado = citaInicial.puntoVacunacion;
+      _fechaAplicacion = citaInicial.fecha;
+    }
   }
 
   @override
@@ -78,7 +93,7 @@ class _HistorialVacunacionScreenState
 
     try {
       widget.controladorVacunaciones.registrarVacunacion(
-        persona: _busquedaController.text,
+        persona: _busquedaController.text.trim(),
         campana: _campanaSeleccionada!,
         puntoVacunacion: _puntoSeleccionado!,
         fechaAplicacion: _fechaAplicacion,
@@ -116,10 +131,17 @@ class _HistorialVacunacionScreenState
         '${fecha.month.toString().padLeft(2, '0')}/${fecha.year}';
   }
 
+  String _formatoFechaHora(DateTime fecha) {
+    return '${fecha.day.toString().padLeft(2, '0')}/'
+        '${fecha.month.toString().padLeft(2, '0')}/${fecha.year} '
+        '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final historial =
         widget.controladorVacunaciones.historialDe(_busquedaController.text);
+    final citaInicial = widget.citaInicial;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Historial de vacunacion')),
@@ -132,7 +154,7 @@ class _HistorialVacunacionScreenState
               controller: _busquedaController,
               enabled: widget.puedeConsultarOtros,
               decoration: InputDecoration(
-                labelText: 'Persona (nombre completo)',
+                labelText: 'RUT de la persona',
                 prefixIcon: const Icon(Icons.person_search_outlined),
                 border: const OutlineInputBorder(),
                 helperText: widget.puedeConsultarOtros
@@ -141,6 +163,33 @@ class _HistorialVacunacionScreenState
               ),
               onChanged: (_) => setState(() {}),
             ),
+            if (citaInicial != null) ...[
+              const SizedBox(height: 16),
+              Card(
+                color: Colors.blue.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Atendiendo cita',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Persona: ${_personaConsultada?.fullName ?? citaInicial.persona}'),
+                      Text('RUT: ${citaInicial.persona}'),
+                      Text('Campaña: ${citaInicial.campana.nombre}'),
+                      Text('Centro: ${citaInicial.puntoVacunacion.nombre}'),
+                      Text('Fecha de cita: ${_formatoFechaHora(citaInicial.fecha)}'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Text(
               'Dosis registradas (${historial.length})',
