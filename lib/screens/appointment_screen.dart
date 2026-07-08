@@ -32,6 +32,7 @@ class AppointmentScreen extends StatefulWidget {
 class _AppointmentScreenState extends State<AppointmentScreen> {
   final _gestorCitas = GestorCitas();
   final _notificationService = NotificationService();
+  late Usuario _usuarioActual;
   late final ControladorCitas _controladorCitas;
 
   final _gestorVacunaciones = GestorVacunaciones();
@@ -57,6 +58,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   @override
   void initState() {
     super.initState();
+    _usuarioActual = widget.user;
     _controladorCitas = ControladorCitas(_gestorCitas, _notificationService);
     _controladorVacunaciones = ControladorVacunaciones(_gestorVacunaciones);
     _controladorCampanas = ControladorCampanas(_gestorCampanas);
@@ -137,11 +139,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       );
 
       final Cita cita = _controladorCitas.agendarCita(
-        persona: widget.user.fullName,
+        persona: _usuarioActual.fullName,
         puntoVacunacion: _puntoSeleccionado!,
         fecha: fechaHora,
         campana: _campanaSeleccionada!,
-        email: widget.user.email,
+        email: _usuarioActual.email,
       );
 
       setState(() {
@@ -160,10 +162,15 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => FichaScreen(
-          usuarioActual: widget.user,
+          usuarioActual: _usuarioActual,
           controladorCitas: _controladorCitas,
           controladorVacunaciones: _controladorVacunaciones,
-          puedeConsultarOtros: Permisos.puedeConsultarDatosDeOtros(widget.user.rol),
+          puedeConsultarOtros: Permisos.puedeConsultarDatosDeOtros(_usuarioActual.rol),
+          onUsuarioActualizado: (Usuario value) { 
+            setState(() {
+            _usuarioActual = value; 
+          });
+           },
         ),
       ),
     );
@@ -173,12 +180,12 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => HistorialVacunacionScreen(
-          usuarioActual: widget.user,
+          usuarioActual: _usuarioActual,
           controladorVacunaciones: _controladorVacunaciones,
           campanas: _campanas,
           puntosVacunacion: _controladorPuntos.puntos,
-          puedeConsultarOtros: Permisos.puedeConsultarDatosDeOtros(widget.user.rol),
-          puedeRegistrarVacunacion: Permisos.puedeRegistrarVacunacion(widget.user.rol),
+          puedeConsultarOtros: Permisos.puedeConsultarDatosDeOtros(_usuarioActual.rol),
+          puedeRegistrarVacunacion: Permisos.puedeRegistrarVacunacion(_usuarioActual.rol),
         ),
       ),
     );
@@ -188,9 +195,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     Navigator.of(context)
         .push(MaterialPageRoute(
           builder: (_) => SeguimientoCitasScreen(
-            usuarioActual: widget.user,
+            usuarioActual: _usuarioActual,
             controladorCitas: _controladorCitas,
-            puedeGestionarOtros: Permisos.puedeGestionarCitasDeOtros(widget.user.rol),
+            puedeGestionarOtros: Permisos.puedeGestionarCitasDeOtros(_usuarioActual.rol),
           ),
         ))
         .then((_) => setState(() {}));
@@ -227,7 +234,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Cerrar sesión'),
-        content: Text('¿Deseas cerrar la sesión de ${widget.user.fullName} (${widget.user.rol.etiqueta})?'),
+        content: Text('¿Deseas cerrar la sesión de ${_usuarioActual.fullName} (${_usuarioActual.rol.etiqueta})?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -284,11 +291,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
               _construirEnlaceHeader('Historial de vacunaciones', _abrirHistorialVacunacion),
               const SizedBox(width: 8),
               _construirEnlaceHeader('Seguimiento de citas', _abrirSeguimientoCitas),
-              if (Permisos.puedeDefinirCampanas(widget.user.rol)) ...[
+              if (Permisos.puedeDefinirCampanas(_usuarioActual.rol)) ...[
                 const SizedBox(width: 8),
                 _construirEnlaceHeader('Campañas de vacunación', _abrirAdminCampanas),
               ],
-              if (Permisos.puedeGestionarPuntosVacunacion(widget.user.rol)) ...[
+              if (Permisos.puedeGestionarPuntosVacunacion(_usuarioActual.rol)) ...[
                 const SizedBox(width: 8),
                 _construirEnlaceHeader('Centros de vacunación', _abrirAdminPuntos),
               ],
@@ -337,7 +344,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bienvenido, ${widget.user.fullName}',
+                    'Bienvenido, ${_usuarioActual.fullName}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -352,7 +359,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      widget.user.rol.etiqueta,
+                      _usuarioActual.rol.etiqueta,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

@@ -25,7 +25,7 @@ class NotificationService {
   );
 
       if (response.statusCode == 200) {
-        print("Petición de SMS enviada al servidor con éxito.");
+        print("Petición de email enviada al servidor con éxito.");
       } else {
         print("Error en el servidor backend: ${response.body}");
       }

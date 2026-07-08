@@ -2,6 +2,9 @@ import '../models/rol.dart';
 import '../models/usuario.dart';
 
 class AuthService {
+  AuthService._internal();
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
   static final Map<String, Usuario> _usuarios = {
     'usuario': Usuario(
       username: 'usuario',

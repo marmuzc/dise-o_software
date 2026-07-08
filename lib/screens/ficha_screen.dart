@@ -13,6 +13,7 @@ import '../services/auth_service.dart';
 
 class FichaScreen extends StatefulWidget {
   final Usuario usuarioActual;
+  final ValueChanged<Usuario>? onUsuarioActualizado;
   final ControladorCitas controladorCitas;
   final ControladorVacunaciones controladorVacunaciones;
   final bool puedeConsultarOtros;
@@ -23,6 +24,7 @@ class FichaScreen extends StatefulWidget {
     required this.controladorCitas,
     required this.controladorVacunaciones,
     required this.puedeConsultarOtros,
+    this.onUsuarioActualizado,
   });
 
   @override
@@ -104,6 +106,10 @@ class _FichaScreenState extends State<FichaScreen> {
         _mensajeEdicion = 'Datos de contacto actualizados con exito.';
         _esErrorEdicion = false;
       });
+
+      if (persona.username == widget.usuarioActual.username) {
+      widget.onUsuarioActualizado?.call(actualizado);
+    }
     } catch (e) {
       setState(() {
         _mensajeEdicion = e.toString().replaceFirst('Exception: ', '');
