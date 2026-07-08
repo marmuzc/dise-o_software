@@ -141,7 +141,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         puntoVacunacion: _puntoSeleccionado!,
         fecha: fechaHora,
         campana: _campanaSeleccionada!,
-        telefonoContacto: widget.user.cellPhone,
+        email: widget.user.email,
       );
 
       setState(() {

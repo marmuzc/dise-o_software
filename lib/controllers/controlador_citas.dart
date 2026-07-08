@@ -21,7 +21,7 @@ class ControladorCitas {
     required PuntoVacunacion puntoVacunacion,
     required DateTime fecha,
     required Campana campana,
-    required String telefonoContacto,
+    required String email
   }) {
     // Primero se ejecuta la lógica interna del gestor
     final cita = _gestorCitas.crearCita(
@@ -33,7 +33,7 @@ class ControladorCitas {
 
     // Si no hubo excepciones, se dispara la petición SMS en segundo plano
     _notificationService.enviarConfirmacionCita(
-      telefono: telefonoContacto,
+      email: email,
       persona: persona,
       puntoVacunacion: puntoVacunacion.nombre,
       fecha: fecha,
